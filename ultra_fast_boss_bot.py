@@ -6,7 +6,7 @@ from instagrapi import Client
 from flask import Flask
 
 # ==== CONFIG ====
-SESSION_ID = "your_session_id_here"
+SESSION_ID = "9418990308%3AzA30Pox7vFQshb%3A22%3AAYcwZq9Mm4dFZmaTjd9Q3XVEutlX8mfLOuOXp1c-YA"
 NORMAL_REPLIES = [
     "Oye message karega toh tere bhen/maa ko utha ke bhaag jaunga",
     "Tujh jaise log hi bot ko pagal karte hain",
