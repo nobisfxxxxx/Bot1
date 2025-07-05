@@ -1,20 +1,24 @@
 import threading
 import time
+import uuid
 import random
-import logging
 from instagrapi import Client
 from flask import Flask
 
-# ==== CONFIG ====
+# ====== CONFIGURATION ======
 SESSION_ID = "9418990308%3AzA30Pox7vFQshb%3A22%3AAYeIcJwhzZc5SmzIgS0zhUXmzB9A338jdaMb68CHJw"
-NORMAL_REPLIES = [
-    "Oye message karega toh tere bhen/maa ko utha ke bhaag jaunga",
-    "Tujh jaise log hi bot ko pagal karte hain",
-    "Bhaag yahan se warna tera internet ka wire kaat dunga"
-]
 BOSS_USERNAME = "phewphewwiww"
+THANKS_USER = "scy.sandy"
+HATER_USERNAMES = ["own_mystical", "example_hater", "hater_3"]  # ← Replace or add more
+NORMAL_REPLIES = [
+    "Oye message karega toh tere maa ko utha lunga 😈",
+    "Tere jese log msg karte hain, fir maa chudwa ke baithe hote hain 😂",
+    "Abey chup reh, tujhme logic ki kami hai bhai 😭"
+]
+THANKS_REPLY = "@scy.sandy thanks for everything 💜"
+
 BOSS_REPLIES = [
-    "@phewphewwiww I’m watching you 👀. Fix the script now!",
+    "@phewphewwiww Hey, I’m watching you 👀. Fix the script now!",
     "@phewphewwiww Even Termux is tired of your outdated logic 😩",
     "@phewphewwiww Boss, don’t make me restart you again 💻",
     "@phewphewwiww Do you call this a bot? Make it better now 😤",
@@ -65,56 +69,58 @@ BOSS_REPLIES = [
     "@phewphewwiww Add some flair. I feel dry 💀",
     "@phewphewwiww This ain’t a bot. This is depression on loop 😩"
 ]
-THANKS_USER = "scy.sandy"
-THANKS_MSG = "@scy.sandy thanks for everything 💜"
 
-# ==== LOGIN ====
+# ====== LOGIN ======
 cl = Client()
 cl.login_by_sessionid(SESSION_ID)
+print("✅ Logged in")
+
 last_replied = {}
 
-# ==== BOT LOOP ====
+# ====== BOT LOOP ======
 def run_bot():
     while True:
         try:
             threads = cl.direct_threads(amount=10)
             for thread in threads:
                 if not thread or len(thread.users) < 3:
-                    continue
+                    continue  # Skip non-group chats
 
-                thread_id = thread.id
                 latest_msg = thread.messages[0]
                 sender_id = latest_msg.user_id
-
                 if sender_id == cl.user_id:
                     continue
-                if last_replied.get(thread_id) == latest_msg.id:
+
+                if last_replied.get(thread.id) == latest_msg.id:
                     continue
 
                 sender_username = cl.user_info(sender_id).username
 
+                # Select reply
                 if sender_username == BOSS_USERNAME:
                     reply = random.choice(BOSS_REPLIES)
                 elif sender_username == THANKS_USER:
-                    reply = THANKS_MSG
+                    reply = THANKS_REPLY
+                elif sender_username in HATER_USERNAMES:
+                    reply = f"@{sender_username} Apni maa ko bol, bot se panga na le 😤"
                 else:
                     reply = f"@{sender_username} {random.choice(NORMAL_REPLIES)}"
 
-                cl.direct_send(reply, thread_ids=[thread_id])
-                print(f"✅ Replied: {reply}")
-                last_replied[thread_id] = latest_msg.id
+                cl.direct_send(reply, thread_ids=[thread.id], client_context=str(uuid.uuid4()))
+                print(f"✅ Sent: {reply}")
+                last_replied[thread.id] = latest_msg.id
 
         except Exception as e:
             print(f"⚠️ Bot error: {e}")
 
-        time.sleep(1)
+        time.sleep(0.3)  # Wait 2 seconds
 
-# ==== FLASK KEEP-ALIVE ====
+# ====== FLASK KEEP-ALIVE ======
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "✅ Bot is alive and working."
+    return "✅ Bot is alive and running on Render!"
 
 if __name__ == "__main__":
     threading.Thread(target=run_bot).start()
