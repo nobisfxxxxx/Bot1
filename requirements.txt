@@ -1,1 +1,16 @@
-instagrapi
+# Core bot functionality
+instagrapi==1.19.6
+requests
+pillow>=8.1.1
+
+# Optional but recommended (logging, emoji, config)
+rich
+python-dotenv
+
+# For video clip handling (sometimes used internally)
+moviepy
+imageio
+imageio-ffmpeg
+
+# Prevents TLS issues / warnings
+certifi
