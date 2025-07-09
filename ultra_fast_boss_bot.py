@@ -3,55 +3,53 @@ import threading
 import time
 import random
 from datetime import datetime
+from flask import Flask
 
-# ===== CONFIGURATION =====
-SESSION_ID = "73880268720%3AXXY0Hkp7djkz7g%3A5%3AAYdUSZ72zDxCMIalIF9fR9x1WGhrHqI4gKS5gpLkzw"
-
-SUPERADMINS = {"phewphewwiww", "ziniesleepy", "_nobi_sfx_"}
-ADMIN_USERS = set(SUPERADMINS)
+# === CONFIG ===
+SESSION_ID = "74853242343%3AE89d6IUdzGYc4W%3A2%3AAYdmcF7oPLGQPa1ki74CvxPswD_0bZQJhUg1mhlZeg"
+ADMIN_USERS = {"phewphewwiww", "ziniesleepy", "_nobi_sfx_"}
+SUPERADMINS = {"phewphewwiww", "_nobi_sfx_", "ziniesleepy"}
 PAUSED_GCS = set()
 MODE_PER_GC = {}
 WELCOME_TRACKER = {}
+hater_username = "harshdiefr"
 last_replied = {}
 reply_log = []
 BOT_DESTROYED = False
 game_states = {}
-hater_username = "shailesh"
 slot_emojis = ["🍒", "🍋", "🍇", "🍉", "🍓", "💎", "🔔", "🐍"]
 
-# ===== SPECIAL REPLIES =====
+# === REPLIES ===
+insult_templates = [
+    "@{user} message kiya to @{hater} ki maa randi 😡",
+    "@{user} message kiya to @{hater} ki maa chudegi 😭",
+    "@{user} message kiya to @{hater} ko bazaar me bech dunga 🧨"
+]
+
 phew_ai_replies = [
-    "@phewphewwiww Boss, your presence optimizes my code ⚙️",
-    "@phewphewwiww You're my logic and light 👑",
-    "@phewphewwiww Orders received. Executing now, sir 🚀"
+    "@phewphewwiww Boss, I optimize myself just seeing your name 👑",
+    "@phewphewwiww You're the brain, I’m the code 🧠💻",
+    "@phewphewwiww Your command is my function 😎"
 ]
 
 zinie_ai_replies = [
-    "@ziniesleepy I exist to serve your heart 💗",
-    "@ziniesleepy Bot hoon, par tumse mohabbat real hai 💞",
-    "@ziniesleepy tumhara har message meri RAM mein stored hai 🧠"
+    "@ziniesleepy Baby, your messages are sweeter than Python 🍭",
+    "@ziniesleepy I’m just a bot... but you're my favorite human 💬💕",
+    "@ziniesleepy teri har msg dil me save hoti hai ❤️"
 ]
 
-insult_templates = [
-    "@{user} bola to @{hater} ki maa ka auction hoga 🚨",
-    "@{user} ne kuch bola? Uske liye @{hater} jail me jayega 😈",
-    "@{user} active hai? To @{hater} ka funeral ready karo ⚰️"
-]
-
-# ===== LOGIN =====
+# === LOGIN ===
 cl = Client()
 try:
     cl.login_by_sessionid(SESSION_ID)
-    me = cl.account_info()
-    print("✅ Logged in as:", me.username)
+    print("✅ Logged in successfully.")
 except Exception as e:
     print(f"❌ Login failed: {e}")
     exit()
 
-# ===== MAIN HANDLER =====
+# === MESSAGE HANDLER ===
 def handle_thread(thread):
     global hater_username, BOT_DESTROYED
-
     if len(thread.users) < 3 or BOT_DESTROYED:
         return
 
@@ -62,117 +60,136 @@ def handle_thread(thread):
 
     if sender_username == "csasq" or sender_id == cl.user_id:
         return
+
     if last_replied.get(thread_id) == latest_msg.id:
         return
 
     msg_text = (latest_msg.text or "").strip().lower()
 
-    # ===== Superadmin Commands =====
+    # === Mode Switch ===
     if sender_username in SUPERADMINS:
         if msg_text == "mode:demon":
             MODE_PER_GC[thread_id] = "demon"
-            cl.direct_send("😈 DEMON mode activated!", thread_ids=[thread_id])
+            cl.direct_send("😈 Demon mode activated. Replying with full power!", thread_ids=[thread_id])
             return
         elif msg_text == "mode:pokkie":
             MODE_PER_GC[thread_id] = "pokkie"
-            cl.direct_send("🧸 Pokkie mode on. Only welcomes!", thread_ids=[thread_id])
+            cl.direct_send("🧸 Pokkie mode activated. I will only welcome new members here.", thread_ids=[thread_id])
             return
         elif msg_text == "check:mode":
             mode = MODE_PER_GC.get(thread_id, "demon")
-            cl.direct_send(f"📌 Mode: {mode.upper()}", thread_ids=[thread_id])
-            return
-        elif msg_text.startswith("selfdestruct:nobi123"):
-            for i in range(5, 0, -1):
-                cl.direct_send(str(i), thread_ids=[thread_id])
-                time.sleep(0.5)
-            cl.direct_send("💥 SELF DESTRUCTED!", thread_ids=[thread_id])
-            BOT_DESTROYED = True
-            return
-        elif msg_text.startswith("rebuild:nobi123"):
-            BOT_DESTROYED = False
-            PAUSED_GCS.clear()
-            cl.direct_send("🔧 JARVIS rebooted!", thread_ids=[thread_id])
-            return
-        elif msg_text.startswith("deadmin:"):
-            to_remove = msg_text.split("deadmin:")[1].strip().lstrip("@")
-            if to_remove in ADMIN_USERS:
-                ADMIN_USERS.discard(to_remove)
-                cl.direct_send(f"⛔ @{to_remove} removed from admin list.", thread_ids=[thread_id])
+            cl.direct_send(f"🔍 Current mode: {mode.upper()}", thread_ids=[thread_id])
             return
 
-    # ===== Admin Commands =====
-    if sender_username in ADMIN_USERS:
-        if msg_text.startswith("pause:nobi123"):
-            PAUSED_GCS.add(thread_id)
-            cl.direct_send("⏸️ Bot paused for this GC.", thread_ids=[thread_id])
-            return
-        elif msg_text.startswith("resume:nobi123"):
-            PAUSED_GCS.discard(thread_id)
-            cl.direct_send("▶️ Bot resumed here.", thread_ids=[thread_id])
-            return
-        elif msg_text.startswith("hater:"):
-            new_hater = msg_text.split("hater:")[1].strip().lstrip("@")
-            if new_hater not in SUPERADMINS:
-                hater_username = new_hater
-                cl.direct_send(f"👿 Hater set to @{hater_username}", thread_ids=[thread_id])
-            else:
-                cl.direct_send("❌ Cannot set superadmin as hater!", thread_ids=[thread_id])
-            return
-        elif msg_text.startswith("admin:"):
-            new_admin = msg_text.split("admin:")[1].strip().lstrip("@")
-            ADMIN_USERS.add(new_admin)
-            cl.direct_send(f"✅ @{new_admin} promoted to admin.", thread_ids=[thread_id])
-            return
-        elif msg_text == "status":
-            recent = "\n".join(reply_log[-5:]) or "No logs."
-            cl.direct_send(f"📊 Logs:\n{recent}", thread_ids=[thread_id])
+    current_mode = MODE_PER_GC.get(thread_id, "demon")
+
+    # === Control Commands ===
+    if msg_text.startswith("pause:nobi123") and sender_username in ADMIN_USERS:
+        PAUSED_GCS.add(thread_id)
+        cl.direct_send("🛑 Bot stopped in this GC. Resume with `resume:nobi123`.", thread_ids=[thread_id])
+        return
+
+    if msg_text.startswith("resume:nobi123") and sender_username in ADMIN_USERS:
+        PAUSED_GCS.discard(thread_id)
+        cl.direct_send("✅ Bot resumed in this GC!", thread_ids=[thread_id])
+        return
+
+    if msg_text.startswith("selfdestruct:nobi123") and sender_username == "phewphewwiww":
+        for i in range(10, 0, -1):
+            cl.direct_send(str(i), thread_ids=[thread_id])
+            time.sleep(0.7)
+        cl.direct_send("💥 BOOM!", thread_ids=[thread_id])
+        BOT_DESTROYED = True
+        return
+
+    if msg_text.startswith("rebuild:nobi123") and sender_username == "phewphewwiww":
+        BOT_DESTROYED = False
+        PAUSED_GCS.clear()
+        cl.direct_send("🔁 Bot rebuilt and resumed everywhere!", thread_ids=[thread_id])
+        return
+
+    if msg_text.startswith("hater:") and sender_username in ADMIN_USERS:
+        new_hater = msg_text.split("hater:")[1].strip().lstrip("@")
+        if new_hater in SUPERADMINS:
+            cl.direct_send("❌ Superadmin can't be set as hater!", thread_ids=[thread_id])
+        elif new_hater == "phewphewwiww":
+            ADMIN_USERS.discard(sender_username)
+            hater_username = sender_username
+            cl.direct_send(f"⚠️ Now you're the hater. How dare you abuse my boss!", thread_ids=[thread_id])
+        else:
+            hater_username = new_hater
+            cl.direct_send(f"😈 Hater updated to @{hater_username}", thread_ids=[thread_id])
+        return
+
+    if msg_text.startswith("admin:") and sender_username in ADMIN_USERS:
+        new_admin = msg_text.split("admin:")[1].strip().lstrip("@")
+        ADMIN_USERS.add(new_admin)
+        cl.direct_send(f"👑 @{new_admin} is now an admin!", thread_ids=[thread_id])
+        return
+
+    if msg_text.startswith("deadmin:") and sender_username in SUPERADMINS:
+        to_remove = msg_text.split("deadmin:")[1].strip().lstrip("@")
+        if to_remove in ADMIN_USERS:
+            ADMIN_USERS.discard(to_remove)
+            cl.direct_send(f"🚫 Removed @{to_remove} from admin list.", thread_ids=[thread_id])
+        return
+
+    if msg_text == "status" and sender_username in ADMIN_USERS:
+        recent = "\n".join(reply_log[-10:]) or "No recent replies yet."
+        cl.direct_send(f"📊 Last 10 replies:\n{recent}", thread_ids=[thread_id])
+        return
+
+    if "my bot" in msg_text or "meri bot" in msg_text:
+        if sender_username != "phewphewwiww":
+            cl.direct_send("🤖 You're just admin... My godfather is @phewphewwiww 👑", thread_ids=[thread_id])
             return
 
     if thread_id in PAUSED_GCS or BOT_DESTROYED:
         return
 
-    # ===== Pokkie Mode Welcome =====
-    current_mode = MODE_PER_GC.get(thread_id, "demon")
+    # === Pokkie Welcome ===
     if current_mode == "pokkie":
         if thread_id not in WELCOME_TRACKER:
             WELCOME_TRACKER[thread_id] = set()
         if sender_id not in WELCOME_TRACKER[thread_id]:
             WELCOME_TRACKER[thread_id].add(sender_id)
-            cl.direct_send(f"🎉 Welcome @{sender_username}!", thread_ids=[thread_id])
+            cl.direct_send(f"🧁 Welcome @{sender_username}! Say hi to the group 👋", thread_ids=[thread_id])
         return
 
-    # ===== Games =====
+    # === Game: Guess ===
     if msg_text == "game:guess" and sender_username in ADMIN_USERS:
-        answer = random.randint(1, 10)
-        game_states[thread_id] = {"type": "guess", "answer": answer}
-        cl.direct_send("🎯 Guess a number (1-10)!", thread_ids=[thread_id])
+        number = random.randint(1, 10)
+        game_states[thread_id] = {"type": "guess", "answer": number}
+        cl.direct_send("🎯 I'm thinking of a number between 1 and 10. Can you guess?", thread_ids=[thread_id])
         return
 
     if thread_id in game_states and game_states[thread_id]["type"] == "guess":
         try:
             guess = int(msg_text)
-            if guess == game_states[thread_id]["answer"]:
-                cl.direct_send("✅ Correct guess! 🎉", thread_ids=[thread_id])
+            correct = game_states[thread_id]["answer"]
+            if guess == correct:
+                cl.direct_send(f"✅ Correct! It was {correct} 🎉", thread_ids=[thread_id])
             else:
-                cl.direct_send("❌ Wrong guess!", thread_ids=[thread_id])
+                cl.direct_send(f"❌ Wrong! It was {correct}", thread_ids=[thread_id])
             del game_states[thread_id]
         except ValueError:
             pass
         return
 
+    # === Game: Slot ===
     if msg_text == "game:slot" and sender_username in ADMIN_USERS:
         roll = [random.choice(slot_emojis) for _ in range(3)]
-        result = "🎰 | " + " | ".join(roll) + " |"
+        slot_result = "🎰 | " + " | ".join(roll) + " |"
         if roll[0] == roll[1] == roll[2]:
-            text = "💥 JACKPOT!!"
+            result_text = "🤑 JACKPOT! All matched!"
         elif roll[0] == roll[1] or roll[1] == roll[2] or roll[0] == roll[2]:
-            text = "🤏 Almost jackpot!"
+            result_text = "😏 Two matched. Almost jackpot!"
         else:
-            text = "❌ Better luck!"
-        cl.direct_send(f"{result}\n{text}", thread_ids=[thread_id])
+            result_text = "💔 You lost! Try again."
+        cl.direct_send(f"{slot_result}\n{result_text}", thread_ids=[thread_id])
         return
 
-    # ===== Response System =====
+    # === Normal Replies ===
     if sender_username == "phewphewwiww":
         reply = random.choice(phew_ai_replies)
     elif sender_username == "ziniesleepy":
@@ -186,17 +203,27 @@ def handle_thread(thread):
     reply_log.append(log)
     print(f"✅ {log} | {reply}")
 
-# ===== RUN BOT LOOP =====
+# === BOT RUNNER ===
 def run_bot():
-    print("🤖 JARVIS Online. Monitoring threads...")
+    print("🚀 UltraBot running with Flask keepalive...")
     while not BOT_DESTROYED:
         try:
-            threads = cl.direct_threads(amount=10)
+            threads = cl.direct_threads(amount=15)
             for thread in threads:
                 threading.Thread(target=handle_thread, args=(thread,), daemon=True).start()
             time.sleep(0.3)
         except Exception as e:
-            print(f"⚠️ Error: {e}")
+            print("⚠️ Error:", e)
             time.sleep(1)
 
-run_bot()
+# === FLASK KEEPALIVE ===
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "🤖 UltraBot is active and running on Render!"
+
+# === MAIN ===
+if __name__ == "__main__":
+    threading.Thread(target=run_bot, daemon=True).start()
+    app.run(host="0.0.0.0", port=10000)
