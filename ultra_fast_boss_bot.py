@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Flask
 
 # === CONFIG ===
-SESSION_ID = "74853242343%3AE89d6IUdzGYc4W%3A2%3AAYdmcF7oPLGQPa1ki74CvxPswD_0bZQJhUg1mhlZeg"
+SESSION_ID = "73880268720%3A08mFpGWZlKt7dn%3A2%3AAYfDAZ5BqFpvYmpmt8fnX2iwrmdDOgcO0_AKs9Qpzw"
 ADMIN_USERS = {"phewphewwiww", "ziniesleepy", "_nobi_sfx_"}
 SUPERADMINS = {"phewphewwiww", "_nobi_sfx_", "ziniesleepy"}
 PAUSED_GCS = set()
