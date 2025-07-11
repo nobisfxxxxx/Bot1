@@ -3,12 +3,12 @@ import threading
 import time
 import random
 from datetime import datetime
-from flask import Flask
 
 # === CONFIG ===
-SESSION_ID = "880268720%3AfsETgCWyO5jlmL%3A29%3AAYdtz62K7PQpPvsyyEmY8iwue1da1TpajOxhO40n3Q"
-ADMIN_USERS = {"phewphewwiww", "ziniesleepy", "_nobi_sfx_"}
-SUPERADMINS = {"phewphewwiww", "_nobi_sfx_", "ziniesleepy"}
+SESSION_ID = "7714906355:AAFM28-4bfLUbfBWqH2ReAvPhHrG12CUTJk"
+
+ADMIN_USERS = {"phewphewwiww", "phewphewwiwww", "ziniesleepy", "nobi_sfx"}
+SUPERADMINS = {"phewphewwiww", "phewphewwiwww", "ziniesleepy", "nobi_sfx", "zinie"}
 PAUSED_GCS = set()
 MODE_PER_GC = {}
 WELCOME_TRACKER = {}
@@ -22,8 +22,8 @@ slot_emojis = ["🍒", "🍋", "🍇", "🍉", "🍓", "💎", "🔔", "🐍"]
 # === REPLIES ===
 insult_templates = [
     "@{user} message kiya to @{hater} ki maa randi 😡",
-    "@{user} message kiya to @{hater} ki maa chudegi 😭",
-    "@{user} message kiya to @{hater} ko bazaar me bech dunga 🧨"
+    "@{user} oyee ye larki @{hater} sub ko aapna shumt ka pic bhejti h...dont delayy jaldi maang dm kar ke usse😭",
+    "@{user} ahhh kall raat ko @{hater} iska dekh ke hila diya tha🧨"
 ]
 
 phew_ai_replies = [
@@ -40,16 +40,39 @@ zinie_ai_replies = [
 
 # === LOGIN ===
 cl = Client()
+
+cl.set_device({
+    "manufacturer": "Samsung",
+    "model": "SM-G973F",
+    "android_version": 29,
+    "android_release": "10.0",
+    "cpu": "arm64-v8a",
+    "resolution": "1080x2280",
+    "device": "beyond1",
+    "dpi": "420dpi"
+})
+
+cl.set_settings({
+    "app_version": "157.0.0.37.123",
+    "android_version": 29,
+    "android_release": "10",
+    "dpi": "420dpi",
+    "device": "beyond1",
+    "model": "SM-G973F",
+    "manufacturer": "Samsung",
+})
+
 try:
     cl.login_by_sessionid(SESSION_ID)
-    print("✅ Logged in successfully.")
+    print("✅ Logged in successfully as bot.")
 except Exception as e:
     print(f"❌ Login failed: {e}")
     exit()
 
-# === MESSAGE HANDLER ===
+# === HANDLER ===
 def handle_thread(thread):
     global hater_username, BOT_DESTROYED
+
     if len(thread.users) < 3 or BOT_DESTROYED:
         return
 
@@ -66,15 +89,14 @@ def handle_thread(thread):
 
     msg_text = (latest_msg.text or "").strip().lower()
 
-    # === Mode Switch ===
     if sender_username in SUPERADMINS:
         if msg_text == "mode:demon":
             MODE_PER_GC[thread_id] = "demon"
-            cl.direct_send("😈 Demon mode activated. Replying with full power!", thread_ids=[thread_id])
+            cl.direct_send("😈 Demon mode activated.", thread_ids=[thread_id])
             return
         elif msg_text == "mode:pokkie":
             MODE_PER_GC[thread_id] = "pokkie"
-            cl.direct_send("🧸 Pokkie mode activated. I will only welcome new members here.", thread_ids=[thread_id])
+            cl.direct_send("🧸 Pokkie mode activated.", thread_ids=[thread_id])
             return
         elif msg_text == "check:mode":
             mode = MODE_PER_GC.get(thread_id, "demon")
@@ -83,42 +105,37 @@ def handle_thread(thread):
 
     current_mode = MODE_PER_GC.get(thread_id, "demon")
 
-    # === Control Commands ===
     if msg_text.startswith("pause:nobi123") and sender_username in ADMIN_USERS:
         PAUSED_GCS.add(thread_id)
-        cl.direct_send("🛑 Bot stopped in this GC. Resume with `resume:nobi123`.", thread_ids=[thread_id])
+        cl.direct_send("🛑 Bot paused in this GC.", thread_ids=[thread_id])
         return
 
     if msg_text.startswith("resume:nobi123") and sender_username in ADMIN_USERS:
         PAUSED_GCS.discard(thread_id)
-        cl.direct_send("✅ Bot resumed in this GC!", thread_ids=[thread_id])
+        cl.direct_send("✅ Bot resumed.", thread_ids=[thread_id])
         return
 
-    if msg_text.startswith("selfdestruct:nobi123") and sender_username == "phewphewwiww":
-        for i in range(10, 0, -1):
+    if msg_text.startswith("selfdestruct:nobi123") and sender_username in SUPERADMINS:
+        for i in range(5, 0, -1):
             cl.direct_send(str(i), thread_ids=[thread_id])
-            time.sleep(0.7)
-        cl.direct_send("💥 BOOM!", thread_ids=[thread_id])
+            time.sleep(0.5)
+        cl.direct_send("💥 BOOM! Bot destroyed.", thread_ids=[thread_id])
         BOT_DESTROYED = True
         return
 
-    if msg_text.startswith("rebuild:nobi123") and sender_username == "phewphewwiww":
+    if msg_text.startswith("rebuild:nobi123") and sender_username in SUPERADMINS:
         BOT_DESTROYED = False
         PAUSED_GCS.clear()
-        cl.direct_send("🔁 Bot rebuilt and resumed everywhere!", thread_ids=[thread_id])
+        cl.direct_send("🔁 Bot rebuilt and resumed!", thread_ids=[thread_id])
         return
 
     if msg_text.startswith("hater:") and sender_username in ADMIN_USERS:
         new_hater = msg_text.split("hater:")[1].strip().lstrip("@")
         if new_hater in SUPERADMINS:
-            cl.direct_send("❌ Superadmin can't be set as hater!", thread_ids=[thread_id])
-        elif new_hater == "phewphewwiww":
-            ADMIN_USERS.discard(sender_username)
-            hater_username = sender_username
-            cl.direct_send(f"⚠️ Now you're the hater. How dare you abuse my boss!", thread_ids=[thread_id])
-        else:
-            hater_username = new_hater
-            cl.direct_send(f"😈 Hater updated to @{hater_username}", thread_ids=[thread_id])
+            cl.direct_send("🚫 You can't set a superadmin as hater!", thread_ids=[thread_id])
+            return
+        hater_username = new_hater
+        cl.direct_send(f"😈 Hater updated to @{hater_username}", thread_ids=[thread_id])
         return
 
     if msg_text.startswith("admin:") and sender_username in ADMIN_USERS:
@@ -139,28 +156,25 @@ def handle_thread(thread):
         cl.direct_send(f"📊 Last 10 replies:\n{recent}", thread_ids=[thread_id])
         return
 
-    if "my bot" in msg_text or "meri bot" in msg_text:
-        if sender_username != "phewphewwiww":
-            cl.direct_send("🤖 You're just admin... My godfather is @phewphewwiww 👑", thread_ids=[thread_id])
-            return
+    if "my bot" in msg_text and sender_username != "phewphewwiww":
+        cl.direct_send("🤖 You're just admin... My godfather is @phewphewwiww 👑", thread_ids=[thread_id])
+        return
 
     if thread_id in PAUSED_GCS or BOT_DESTROYED:
         return
 
-    # === Pokkie Welcome ===
     if current_mode == "pokkie":
         if thread_id not in WELCOME_TRACKER:
             WELCOME_TRACKER[thread_id] = set()
         if sender_id not in WELCOME_TRACKER[thread_id]:
             WELCOME_TRACKER[thread_id].add(sender_id)
-            cl.direct_send(f"🧁 Welcome @{sender_username}! Say hi to the group 👋", thread_ids=[thread_id])
+            cl.direct_send(f"🧁 Welcome @{sender_username}!", thread_ids=[thread_id])
         return
 
-    # === Game: Guess ===
     if msg_text == "game:guess" and sender_username in ADMIN_USERS:
         number = random.randint(1, 10)
         game_states[thread_id] = {"type": "guess", "answer": number}
-        cl.direct_send("🎯 I'm thinking of a number between 1 and 10. Can you guess?", thread_ids=[thread_id])
+        cl.direct_send("🎯 I'm thinking of a number between 1 and 10.", thread_ids=[thread_id])
         return
 
     if thread_id in game_states and game_states[thread_id]["type"] == "guess":
@@ -176,20 +190,18 @@ def handle_thread(thread):
             pass
         return
 
-    # === Game: Slot ===
     if msg_text == "game:slot" and sender_username in ADMIN_USERS:
         roll = [random.choice(slot_emojis) for _ in range(3)]
-        slot_result = "🎰 | " + " | ".join(roll) + " |"
+        result = "🎰 | " + " | ".join(roll) + " |"
         if roll[0] == roll[1] == roll[2]:
-            result_text = "🤑 JACKPOT! All matched!"
+            msg = "🤑 JACKPOT!"
         elif roll[0] == roll[1] or roll[1] == roll[2] or roll[0] == roll[2]:
-            result_text = "😏 Two matched. Almost jackpot!"
+            msg = "😏 Two matched!"
         else:
-            result_text = "💔 You lost! Try again."
-        cl.direct_send(f"{slot_result}\n{result_text}", thread_ids=[thread_id])
+            msg = "💔 You lost!"
+        cl.direct_send(f"{result}\n{msg}", thread_ids=[thread_id])
         return
 
-    # === Normal Replies ===
     if sender_username == "phewphewwiww":
         reply = random.choice(phew_ai_replies)
     elif sender_username == "ziniesleepy":
@@ -203,9 +215,9 @@ def handle_thread(thread):
     reply_log.append(log)
     print(f"✅ {log} | {reply}")
 
-# === BOT RUNNER ===
-def run_bot():
-    print("🚀 UltraBot running with Flask keepalive...")
+# === LOOP ===
+def ultra_bot():
+    print("🤖 JARVIS bot initialized...")
     while not BOT_DESTROYED:
         try:
             threads = cl.direct_threads(amount=15)
@@ -213,17 +225,7 @@ def run_bot():
                 threading.Thread(target=handle_thread, args=(thread,), daemon=True).start()
             time.sleep(0.3)
         except Exception as e:
-            print("⚠️ Error:", e)
+            print(f"⚠️ Error: {e}")
             time.sleep(1)
 
-# === FLASK KEEPALIVE ===
-app = Flask(__name__)
-
-@app.route('/')
-def home():
-    return "🤖 UltraBot is active and running on Render!"
-
-# === MAIN ===
-if __name__ == "__main__":
-    threading.Thread(target=run_bot, daemon=True).start()
-    app.run(host="0.0.0.0", port=10000)
+ultra_bot()
