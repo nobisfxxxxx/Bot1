@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 
 # === CONFIG ===
-SESSION_ID = "7714906355:AAFM28-4bfLUbfBWqH2ReAvPhHrG12CUTJk"
+SESSION_ID = "75326180314%3AmqQRejehzkd6YB%3A8%3AAYd35iFYpNe3wfnFAKsbFdb_0_TMF3Sfmd781kPifA"
 
 ADMIN_USERS = {"phewphewwiww", "phewphewwiwww", "ziniesleepy", "nobi_sfx"}
 SUPERADMINS = {"phewphewwiww", "phewphewwiwww", "ziniesleepy", "nobi_sfx", "zinie"}
